@@ -1,0 +1,101 @@
+--Creation of tables
+
+CREATE TABLE book
+(
+    id serial PRIMARY KEY,
+    name character varying NOT NULL,
+    price real NOT NULL,
+    warehouse character varying NOT NULL,
+    quantity integer NOT NULL
+);
+
+CREATE TABLE customer
+(
+    id serial PRIMARY KEY,
+    surname character varying NOT NULL,
+    area_of_residence character varying NOT NULL,
+    discount real NOT NULL
+);
+
+CREATE TABLE store
+(
+    id serial PRIMARY KEY,
+    name character varying NOT NULL,
+    location_area character varying NOT NULL,
+    commission_fee real NOT NULL
+);
+
+CREATE TABLE purchase
+(
+    purchase_number serial PRIMARY KEY,
+    seller integer NOT NULL,
+    customer integer NOT NULL,
+    book integer NOT NULL,
+    quantity integer NOT NULL,
+    purchase_amount real NOT NULL,
+    date timestamp with time zone NOT NULL,
+    CONSTRAINT purchase_book_fkey FOREIGN KEY (book)
+        REFERENCES book (id),
+    CONSTRAINT purchase_customer_fkey FOREIGN KEY (customer)
+        REFERENCES customer (id),
+    CONSTRAINT purchase_seller_fkey FOREIGN KEY (seller)
+        REFERENCES store (id)
+);
+
+--Insertion of data in the tables
+
+--Queries
+
+--2.a
+SELECT DISTINCT name, price FROM book;
+--2.b
+SELECT DISTINCT area_of_residence FROM customer;
+--2.c
+SELECT DISTINCT date FROM purchase;
+
+--3.a
+SELECT surname, discount FROM customer
+WHERE  area_of_residence = РАЙОН;
+--3.b
+SELECT name FROM store
+WHERE location_area = РАЙОН1 OR location_area = РАЙОН2;
+--3.c
+SELECT name, price FROM book
+WHERE name LIKE '%СЛОВО%' OR price > ЧИСЛО
+ORDER BY price DESC;
+
+--4.a
+SELECT p.purchase_number, c.surname, s.name FROM purchase AS p
+JOIN store AS s ON p.seller = s.id
+JOIN customer AS c ON p.customer = c.id;
+--4.b
+SELECT p.date, c.surname, c.discount, b.name, p.quantity FROM purchase AS p
+JOIN book AS b ON p.book = b.id
+JOIN customer AS c ON p.customer = c.id;
+
+--5.a
+SELECT p.purchase_number, c.surname, p.date FROM purchase AS p
+JOIN customer AS c ON p.customer = c.id
+WHERE p.purchase_amount >= ЧИСЛО;
+--5.b
+SELECT p.purchase_number, c.surname, c.area_of_residence, p.date FROM purchase AS p
+JOIN customer AS c ON p.customer = c.id
+JOIN store AS s ON p.seller = s.id
+WHERE c.area_of_residence = s.location_area AND
+p.date > МЕСЯЦ
+ORDER BY p.purchase_number;
+--5.c
+SELECT DISTINCT s.id, s.name FROM store AS s
+JOIN purchase AS p ON s.id = p.seller
+JOIN customer AS c ON p.customer = c.id
+WHERE s.location_area != РАЙОН AND
+(c.discount >= ЧИСЛО AND c.discount <= ЧИСЛО);
+--5.d
+SELECT b.name, b.warehouse, b.quantity, b.price FROM book AS b
+JOIN purchase AS p ON b.id = p.book
+JOIN store AS s ON p.seller = s.id
+WHERE b.warehouse = s.location_area AND
+b.quantity > ЧИСЛО
+ORDER BY b.price;
+
+
