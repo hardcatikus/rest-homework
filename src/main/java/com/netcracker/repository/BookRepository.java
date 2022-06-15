@@ -9,5 +9,5 @@ import java.util.List;
 @Repository
 public interface BookRepository extends JpaRepository<Book,Integer> {
 
-    List<Book> findAllByNameContainingOrPriceIsGreaterThan(String word, Float price);
+    List<Book> findAllByNameContainingOrPriceIsGreaterThanOrderByPriceDesc(String word, Float price);
 }

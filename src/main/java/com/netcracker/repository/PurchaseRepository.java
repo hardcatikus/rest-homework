@@ -7,7 +7,9 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-public interface PurchaseRepository extends JpaRepository<Purchase,Integer> {
+public interface PurchaseRepository extends JpaRepository<Purchase, Integer> {
 
     List<Purchase> findAllByPurchaseAmountIsGreaterThanEqual(Float sum);
+
+    List<Purchase> findAllByOrderByDateDesc();
 }

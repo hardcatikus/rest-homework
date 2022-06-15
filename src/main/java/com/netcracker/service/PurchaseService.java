@@ -1,8 +1,12 @@
 package com.netcracker.service;
 
 import com.netcracker.dto.*;
+import com.netcracker.exception.ResourceNotFoundException;
 import com.netcracker.model.Purchase;
-import com.netcracker.repository.*;
+import com.netcracker.repository.BookRepository;
+import com.netcracker.repository.CustomerRepository;
+import com.netcracker.repository.PurchaseRepository;
+import com.netcracker.repository.StoreRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -23,10 +27,51 @@ public class PurchaseService {
         this.bookRepository = bookRepository;
     }
 
+    public List<Purchase> findAll() {
+        return purchaseRepository.findAll();
+    }
+
+    public Purchase getPurchaseById(Integer id) throws ResourceNotFoundException {
+        Purchase purchase = purchaseRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Purchase was not found for id:" + id));
+        return purchase;
+    }
+
+    public Purchase save(Purchase purchase) {
+        return purchaseRepository.save(purchase);
+    }
+
+    public void delete(Integer id) throws ResourceNotFoundException {
+        Purchase purchase = purchaseRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Purchase was not found for id:" + id));
+        purchaseRepository.delete(purchase);
+    }
+
+    public void updatePurchaseQuantity(Integer id, Integer quantity) throws ResourceNotFoundException {
+        Purchase purchase = purchaseRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Purchase was not found for id:" + id));
+        purchase.setQuantity(quantity);
+        purchaseRepository.save(purchase);
+    }
+
+    public void updatePurchase(Integer id, Purchase purchaseDescription) throws ResourceNotFoundException {
+        Purchase purchase = purchaseRepository.findById(id).orElseThrow(() ->
+                new ResourceNotFoundException("Book was not found for id:" + id));
+
+        purchase.setDate(purchaseDescription.getDate());
+        purchase.setSeller(purchaseDescription.getSeller());
+        purchase.setCustomer(purchaseDescription.getCustomer());
+        purchase.setBook(purchaseDescription.getBook());
+        purchase.setQuantity(purchaseDescription.getQuantity());
+        purchase.setPurchaseAmount(purchaseDescription.getPurchaseAmount());
+
+        purchaseRepository.save(purchase);
+    }
+
     public HashSet<PurchaseDTO> getMonths() {
         List<Purchase> purchases = purchaseRepository.findAll();
         HashSet<PurchaseDTO> result = new HashSet<>();
-        for (Purchase purchase: purchases) {
+        for (Purchase purchase : purchases) {
             PurchaseDTO purchaseDTO = new PurchaseDTO(purchase.getDate());
             result.add(purchaseDTO);
         }
@@ -78,14 +123,14 @@ public class PurchaseService {
     }
 
     public List<PurchaseAndCustomerOfMonthDTO> getPurchaseAndCustomerAfterMonth(Integer monthNumber){
-        ArrayList<Purchase> purchases = (ArrayList<Purchase>) purchaseRepository.findAll();
+        ArrayList<Purchase> purchases = (ArrayList<Purchase>) purchaseRepository.findAllByOrderByDateDesc();
         ArrayList<PurchaseAndCustomerOfMonthDTO> result = new ArrayList<>();
         if(!purchases.isEmpty()){
             for (Purchase purchase: purchases) {
-                if(customerRepository.getById(purchase.getCustomer()).getAreaOfResidence().equals(storeRepository.getById(purchase.getCustomer()).getLocationArea())) {
+                if (customerRepository.getById(purchase.getCustomer()).getAreaOfResidence().equals(storeRepository.getById(purchase.getSeller()).getLocationArea())) {
                     Calendar cal = Calendar.getInstance();
                     cal.setTime(purchase.getDate());
-                    if(cal.get(Calendar.MONTH) >= monthNumber){
+                    if (cal.get(Calendar.MONTH) >= monthNumber) {
                         result.add(new PurchaseAndCustomerOfMonthDTO(purchase.getPurchaseNumber(),
                                 customerRepository.getById(purchase.getCustomer()).getSurname(),
                                 customerRepository.getById(purchase.getCustomer()).getAreaOfResidence(),
@@ -135,6 +180,7 @@ public class PurchaseService {
         } else {
             return new ArrayList<>();
         }
+        Collections.sort(result);
         return result;
     }
 }

@@ -1,6 +1,6 @@
 package com.netcracker.dto;
 
-public class BookSoldInWarehouseAreaDTO {
+public class BookSoldInWarehouseAreaDTO implements Comparable<BookSoldInWarehouseAreaDTO> {
 
     private String name;
     private String warehouse;
@@ -44,5 +44,14 @@ public class BookSoldInWarehouseAreaDTO {
 
     public void setPrice(Float price) {
         this.price = price;
+    }
+
+
+    @Override
+    public int compareTo(BookSoldInWarehouseAreaDTO o) {
+        if (price == null || o.getPrice() == null) {
+            return 0;
+        }
+        return price.compareTo(o.getPrice());
     }
 }
