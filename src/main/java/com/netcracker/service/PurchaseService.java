@@ -1,19 +1,11 @@
 package com.netcracker.service;
 
-import com.netcracker.dto.PurchaseAndCustomerDTO;
-import com.netcracker.dto.PurchaseDTO;
-import com.netcracker.dto.CustomerAndStoreDTO;
-import com.netcracker.dto.PurchaseNumberCustomerSurnameDTO;
+import com.netcracker.dto.*;
 import com.netcracker.model.Purchase;
-import com.netcracker.repository.BookRepository;
-import com.netcracker.repository.CustomerRepository;
-import com.netcracker.repository.PurchaseRepository;
-import com.netcracker.repository.StoreRepository;
+import com.netcracker.repository.*;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class PurchaseService {
@@ -23,7 +15,8 @@ public class PurchaseService {
     private final StoreRepository storeRepository;
     private final BookRepository bookRepository;
 
-    public PurchaseService(PurchaseRepository purchaseRepository, CustomerRepository customerRepository, StoreRepository storeRepository, BookRepository bookRepository) {
+    public PurchaseService(PurchaseRepository purchaseRepository, CustomerRepository customerRepository,
+                           StoreRepository storeRepository, BookRepository bookRepository) {
         this.purchaseRepository = purchaseRepository;
         this.customerRepository = customerRepository;
         this.storeRepository = storeRepository;
@@ -44,9 +37,9 @@ public class PurchaseService {
         ArrayList<Purchase> purchases = (ArrayList<Purchase>) purchaseRepository.findAll();
         ArrayList<CustomerAndStoreDTO> result = new ArrayList<>();
         if(!purchases.isEmpty()){
-            for (Purchase purchase:
-                 purchases) {
-                result.add(new CustomerAndStoreDTO(customerRepository.getById(purchase.getCustomer()).getSurname(), storeRepository.getById(purchase.getSeller()).getName()));
+            for (Purchase purchase: purchases) {
+                result.add(new CustomerAndStoreDTO(customerRepository.getById(purchase.getCustomer()).getSurname(),
+                        storeRepository.getById(purchase.getSeller()).getName()));
             }
         } else {
             return new ArrayList<>();
@@ -58,9 +51,11 @@ public class PurchaseService {
         ArrayList<Purchase> purchases = (ArrayList<Purchase>) purchaseRepository.findAll();
         ArrayList<PurchaseAndCustomerDTO> result = new ArrayList<>();
         if(!purchases.isEmpty()){
-            for (Purchase purchase:
-                    purchases) {
-                result.add(new PurchaseAndCustomerDTO(purchase.getDate(), customerRepository.getById(purchase.getCustomer()).getSurname(), customerRepository.getById(purchase.getCustomer()).getDiscount(), bookRepository.getById(purchase.getBook()).getName(), purchase.getQuantity()));
+            for (Purchase purchase: purchases) {
+                result.add(new PurchaseAndCustomerDTO(purchase.getDate(),
+                        customerRepository.getById(purchase.getCustomer()).getSurname(),
+                        customerRepository.getById(purchase.getCustomer()).getDiscount(),
+                        bookRepository.getById(purchase.getBook()).getName(), purchase.getQuantity()));
             }
         } else {
             return new ArrayList<>();
@@ -72,9 +67,70 @@ public class PurchaseService {
         ArrayList<Purchase> purchases = (ArrayList<Purchase>) purchaseRepository.findAllByPurchaseAmountIsGreaterThanEqual(sum);
         ArrayList<PurchaseNumberCustomerSurnameDTO> result = new ArrayList<>();
         if(!purchases.isEmpty()){
-            for (Purchase purchase:
-                    purchases) {
-                result.add(new PurchaseNumberCustomerSurnameDTO(purchase.getPurchaseNumber(), customerRepository.getById(purchase.getCustomer()).getSurname(),  purchase.getDate()));
+            for (Purchase purchase: purchases) {
+                result.add(new PurchaseNumberCustomerSurnameDTO(purchase.getPurchaseNumber(),
+                        customerRepository.getById(purchase.getCustomer()).getSurname(),  purchase.getDate()));
+            }
+        } else {
+            return new ArrayList<>();
+        }
+        return result;
+    }
+
+    public List<PurchaseAndCustomerOfMonthDTO> getPurchaseAndCustomerAfterMonth(Integer monthNumber){
+        ArrayList<Purchase> purchases = (ArrayList<Purchase>) purchaseRepository.findAll();
+        ArrayList<PurchaseAndCustomerOfMonthDTO> result = new ArrayList<>();
+        if(!purchases.isEmpty()){
+            for (Purchase purchase: purchases) {
+                if(customerRepository.getById(purchase.getCustomer()).getAreaOfResidence().equals(storeRepository.getById(purchase.getCustomer()).getLocationArea())) {
+                    Calendar cal = Calendar.getInstance();
+                    cal.setTime(purchase.getDate());
+                    if(cal.get(Calendar.MONTH) >= monthNumber){
+                        result.add(new PurchaseAndCustomerOfMonthDTO(purchase.getPurchaseNumber(),
+                                customerRepository.getById(purchase.getCustomer()).getSurname(),
+                                customerRepository.getById(purchase.getCustomer()).getAreaOfResidence(),
+                                purchase.getDate()));
+                    }
+                }
+            }
+        } else {
+            return new ArrayList<>();
+        }
+        return result;
+    }
+
+    public List<StoresNotInAreaDTO> getStoreNotInArea(String area, Float lowestDiscount, Float highestDiscount){
+        ArrayList<Purchase> purchases = (ArrayList<Purchase>) purchaseRepository.findAll();
+        ArrayList<StoresNotInAreaDTO> result = new ArrayList<>();
+        if(!purchases.isEmpty()){
+            for (Purchase purchase: purchases) {
+                if(!storeRepository.getById(purchase.getSeller()).getLocationArea().equals(area)) {
+                    if(customerRepository.getById(purchase.getCustomer()).getDiscount() >= lowestDiscount &&
+                            customerRepository.getById(purchase.getCustomer()).getDiscount() <= highestDiscount){
+                        result.add(new StoresNotInAreaDTO(storeRepository.getById(purchase.getSeller()).getName(),
+                                storeRepository.getById(purchase.getSeller()).getLocationArea()));
+                    }
+                }
+            }
+        } else {
+            return new ArrayList<>();
+        }
+        return result;
+    }
+
+    public List<BookSoldInWarehouseAreaDTO> getBookSoldInWarehouseArea(Integer remainAmount){
+        ArrayList<Purchase> purchases = (ArrayList<Purchase>) purchaseRepository.findAll();
+        ArrayList<BookSoldInWarehouseAreaDTO> result = new ArrayList<>();
+        if(!purchases.isEmpty()){
+            for (Purchase purchase: purchases) {
+                if(storeRepository.getById(purchase.getSeller()).getLocationArea().equals(bookRepository.getById(purchase.getBook()).getWarehouse())) {
+                    if(bookRepository.getById(purchase.getBook()).getQuantity() > remainAmount){
+                        result.add(new BookSoldInWarehouseAreaDTO(bookRepository.getById(purchase.getBook()).getName(),
+                                bookRepository.getById(purchase.getBook()).getWarehouse(),
+                                bookRepository.getById(purchase.getBook()).getQuantity(),
+                                bookRepository.getById(purchase.getBook()).getPrice()));
+                    }
+                }
             }
         } else {
             return new ArrayList<>();

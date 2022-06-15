@@ -1,9 +1,6 @@
 package com.netcracker.controller;
 
-import com.netcracker.dto.PurchaseAndCustomerDTO;
-import com.netcracker.dto.PurchaseDTO;
-import com.netcracker.dto.CustomerAndStoreDTO;
-import com.netcracker.dto.PurchaseNumberCustomerSurnameDTO;
+import com.netcracker.dto.*;
 import com.netcracker.exception.ResourceNotFoundException;
 import com.netcracker.model.Purchase;
 import com.netcracker.repository.PurchaseRepository;
@@ -104,5 +101,25 @@ public class PurchaseController {
     @GetMapping("/getPurchaseNumberAndCustomerSurnameWithSum")
     public ResponseEntity<List<PurchaseNumberCustomerSurnameDTO>> getPurchaseNumberAndCustomerSurnameWithSum(@RequestParam(value = "sum") Float sum){
         return ResponseEntity.ok(purchaseService.getPurchaseNumberAndCustomerSurnameWithSum(sum));
+    }
+
+    //вывести покупки, сделанные покупателем в своем районе не ранее марта месяца. Вывести фамилию покупателя, район, дату
+    @GetMapping("/getPurchaseAndCustomerAfterMonth")
+    public ResponseEntity<List<PurchaseAndCustomerOfMonthDTO>> getPurchaseAndCustomerAfterMonth(@RequestParam(value = "monthNumber") Integer monthNumber){
+        return ResponseEntity.ok(purchaseService.getPurchaseAndCustomerAfterMonth(monthNumber));
+    }
+
+    //вывести магазины, расположенные в любом районе, кроме Автозаводского, где покупали книги те, у кого скидка от 10 до 15 %
+    @GetMapping("/getStoreNotInArea")
+    public ResponseEntity<List<StoresNotInAreaDTO>> getStoreNotInArea(@RequestParam(value = "area") String area,
+                                                                      @RequestParam(value = "lowestDiscount") Float lowestDiscount,
+                                                                      @RequestParam(value = "highestDiscount") Float highestDiscount){
+        return ResponseEntity.ok(purchaseService.getStoreNotInArea(area,lowestDiscount,highestDiscount));
+    }
+
+    //вывести данные по покупке книг (название, район складирования, количество), приобретенных в районе складирования и содержащихся в запасе более 10 штук
+    @GetMapping("/getBookSoldInWarehouseArea")
+    public ResponseEntity<List<BookSoldInWarehouseAreaDTO>> getBookSoldInWarehouseArea(@RequestParam(value = "remainAmount") Integer remainAmount){
+        return ResponseEntity.ok(purchaseService.getBookSoldInWarehouseArea(remainAmount));
     }
 }
