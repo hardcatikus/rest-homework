@@ -1,24 +1,29 @@
 package com.netcracker.controller;
 
+import com.netcracker.dto.StoreDTO;
 import com.netcracker.exception.ResourceNotFoundException;
 import com.netcracker.model.Store;
 import com.netcracker.repository.StoreRepository;
 import com.netcracker.response.DeleteResponse;
 import com.netcracker.response.UpdateResponse;
 import com.netcracker.service.StoreService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
 @RequestMapping("/rest")
 public class StoreController {
 
-    @Autowired
-    StoreRepository repository;
-    StoreService storeService;
+    private final StoreRepository repository;
+    private final StoreService storeService;
+
+    public StoreController(StoreRepository repository, StoreService storeService) {
+        this.repository = repository;
+        this.storeService = storeService;
+    }
 
     @GetMapping("/stores")
     public List<Store> getAllStores(){
@@ -45,9 +50,9 @@ public class StoreController {
         return ResponseEntity.ok(new DeleteResponse("Store with id:" + id + " was deleted"));
     }
 
-    @PatchMapping("/stores/{id}/{name}")
+    @PatchMapping("/stores/{id}")
     public ResponseEntity<UpdateResponse> updateStoreName(@PathVariable(value = "id") Integer id,
-                                                                @RequestBody String name) throws ResourceNotFoundException{
+                                                                @RequestParam(value = "name")  String name) throws ResourceNotFoundException{
         Store store = repository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Store was not found for id:" + id));
         store.setName(name);
@@ -68,5 +73,12 @@ public class StoreController {
 
         repository.save(store);
         return ResponseEntity.ok(new UpdateResponse("Store with id:" + id + " was updated"));
+    }
+
+    //вывести названия магазинов из двух районов
+    @GetMapping("/storesFromTwoAreas")
+    public ResponseEntity<ArrayList<StoreDTO>> getStoresFromTwoAreas(@RequestParam(value = "firstArea") String firstArea,
+                                                                    @RequestParam(value = "secondArea") String secondArea){
+        return ResponseEntity.ok(storeService.getStoresFromTwoAreas(firstArea,secondArea));
     }
 }

@@ -11,14 +11,14 @@ public class Book {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     @Column(nullable = false)
     private String name;
     @Column(nullable = false)
-    private float price;
+    private Float price;
     @Column(nullable = false)
     private String warehouse;
     @Column(nullable = false)
-    private int quantity;
+    private Integer quantity;
 
 }

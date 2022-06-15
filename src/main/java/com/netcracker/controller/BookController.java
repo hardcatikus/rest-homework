@@ -1,24 +1,30 @@
 package com.netcracker.controller;
 
+import com.netcracker.dto.BookDTO;
 import com.netcracker.exception.ResourceNotFoundException;
 import com.netcracker.model.Book;
 import com.netcracker.repository.BookRepository;
 import com.netcracker.response.DeleteResponse;
 import com.netcracker.response.UpdateResponse;
 import com.netcracker.service.BookService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 @RestController
 @RequestMapping("/rest")
 public class BookController {
 
-    @Autowired
-    BookRepository repository;
-    BookService bookService;
+    private final BookRepository repository;
+    private final BookService bookService;
+
+    public BookController(BookRepository repository, BookService bookService) {
+        this.repository = repository;
+        this.bookService = bookService;
+    }
 
     @GetMapping("/books")
     public List<Book> getAllBooks(){
@@ -45,9 +51,9 @@ public class BookController {
         return ResponseEntity.ok(new DeleteResponse("Book with id:" + id + " was deleted"));
     }
 
-    @PatchMapping("/books/{id}/{name}")
+    @PatchMapping("/books/{id}")
     public ResponseEntity<UpdateResponse> updateBookName(@PathVariable(value = "id") Integer id,
-                                                          @RequestBody String name) throws ResourceNotFoundException{
+                                                          @RequestParam(value = "name") String name) throws ResourceNotFoundException{
         Book book = repository.findById(id).orElseThrow(() ->
                 new ResourceNotFoundException("Book was not found for id:" + id));
         book.setName(name);
@@ -69,5 +75,18 @@ public class BookController {
 
         repository.save(book);
         return ResponseEntity.ok(new UpdateResponse("Book with id:" + id + " was updated"));
+    }
+
+    //Вывод всех различных названий и стоимостей книг
+    @GetMapping("/allUniqueBooks")
+    public ResponseEntity<HashSet<BookDTO>> getUniqueBooks(){
+        return ResponseEntity.ok(bookService.getBooks());
+    }
+
+    //вывести книги, в названиях которых встречается определенное слово, или стоящих более определенной суммы
+    @GetMapping("/BooksByWordAndPrice")
+    public ResponseEntity<ArrayList<BookDTO>> getBooksByWordAndPrice(@RequestParam(value = "word") String word,
+                                                                     @RequestParam(value = "price") Float price){
+        return ResponseEntity.ok(bookService.getBooksByWordAndPrice(word, price));
     }
 }

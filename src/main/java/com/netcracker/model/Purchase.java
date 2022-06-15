@@ -3,6 +3,7 @@ package com.netcracker.model;
 import lombok.Data;
 
 import javax.persistence.*;
+import java.util.Date;
 
 @Entity
 @Table(name = "purchase")
@@ -14,7 +15,7 @@ public class Purchase {
     @Column(name = "purchase_number")
     private int purchaseNumber;
     @Column(nullable = false)
-    private String date;
+    private Date date;
     @Column(nullable = false)
     private int seller;
     @Column(nullable = false)
